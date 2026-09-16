@@ -80,19 +80,20 @@ The result represents the estimated CO₂ emission for the selected journey.
 GREEN-COMMUTE/
 │
 ├── backend/
+│   ├── Server.js
+│   ├── models/
 │   ├── routes/
-│   │   └── commute.js
-│   └── ...
+│   ├── package.json
+│   └── package-lock.json
 │
 ├── frontend/
 │   ├── index.html
 │   ├── script.js
-│   ├── style.css
-│   └── ...
+│   └── style.css
 │
-├── .gitignore
-└── README.md
+└── .gitignore
 ```
+
 
 ## API
 
