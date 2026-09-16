@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Green Commute Calculator</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background: #f0f8ff; }
+    h1 { color: #2e8b57; }
+    input { width: 80px; margin-right: 10px; }
+    button { padding: 5px 10px; margin-top: 10px; }
+    table { border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid #ccc; padding: 8px 12px; }
+    th { background: #2e8b57; color: white; }
+  </style>
+</head>
+<body>
+  <h1>Green Commute Calculator</h1>
+
+  <div>
+    <label>Car (km): <input type="number" id="car" value="0"></label>
+    <label>Bus (km): <input type="number" id="bus" value="0"></label>
+    <label>Train (km): <input type="number" id="train" value="0"></label>
+    <label>Cycle (km): <input type="number" id="cycle" value="0"></label>
+    <label>Walk (km): <input type="number" id="walk" value="0"></label>
+  </div>
+
+  <button onclick="calculateEmissions()">Calculate & Save</button>
+  <button onclick="loadTrips()">Load All Trips</button>
+
+  <h2>Emissions Result:</h2>
+  <div id="result"></div>
+
+  <h2>All Trips:</h2>
+  <table id="tripsTable">
+    <thead>
+      <tr>
+        <th>Mode</th>
+        <th>Distance (km)</th>
+        <th>Emissions (kg CO2)</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    const API_BASE = "http://localhost:5000/api";
+
+    async function calculateEmissions() {
+      const trips = [
+        { mode: "car", distance: Number(document.getElementById("car").value) },
+        { mode: "bus", distance: Number(document.getElementById("bus").value) },
+        { mode: "train", distance: Number(document.getElementById("train").value) },
+        { mode: "cycle", distance: Number(document.getElementById("cycle").value) },
+        { mode: "walk", distance: Number(document.getElementById("walk").value) }
+      ];
+
+      try {
+        const response = await fetch(`${API_BASE}/calculate-multiple`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ trips })
+        });
+        const data = await response.json();
+
+        if (response.ok) {
+          let html = "<ul>";
+          data.trips.forEach(t => {
+            html += `<li>${t.mode.toUpperCase()}: ${t.distance} km → ${t.emissions.toFixed(2)} kg CO2</li>`;
+          });
+          html += "</ul>";
+          document.getElementById("result").innerHTML = html;
+
+          loadTrips(); // refresh trips table
+        } else {
+          document.getElementById("result").innerText = data.error || "Error occurred";
+        }
+      } catch (err) {
+        document.getElementById("result").innerText = "Server error";
+        console.error(err);
+      }
+    }
+
+    async function loadTrips() {
+      try {
+        const response = await fetch(`${API_BASE}/trips`);
+        const trips = await response.json();
+
+        const tbody = document.querySelector("#tripsTable tbody");
+        tbody.innerHTML = "";
+        trips.forEach(t => {
+          const row = `<tr>
+            <td>${t.mode}</td>
+            <td>${t.distance}</td>
+            <td>${t.emissions.toFixed(2)}</td>
+          </tr>`;
+          tbody.innerHTML += row;
+        });
+      } catch (err) {
+        console.error("Failed to load trips:", err);
+      }
+    }
+  </script>
+</body>
+</html>
